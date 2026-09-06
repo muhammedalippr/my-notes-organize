@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#181920" />
+    
+    <!-- Instant synchronous theme script to prevent any white flashes before React loads -->
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('omni_settings');
+          var theme = 'dark'; // Default to dark theme immediately
+          if (stored) {
+            var parsed = JSON.parse(stored);
+            if (parsed && parsed.theme) {
+              theme = parsed.theme;
+            }
+          }
+          var isDark = false;
+          if (theme === 'system') {
+            isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          } else {
+            isDark = theme !== 'light';
+          }
+          if (isDark) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@500;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>My Notes</title>
+  </head>
+  <body class="antialiased overflow-x-hidden font-sans bg-[#181920] text-[#f8fafc]">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
