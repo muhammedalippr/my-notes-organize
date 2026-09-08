@@ -23,11 +23,10 @@ interface HorizonConfig {
   key: HorizonType;
   title: string;
   icon: React.ComponentType<{ className?: string }>;
-  isHero?: boolean;
 }
 
 const HORIZON_SECTIONS: HorizonConfig[] = [
-  { key: 'today', title: 'Today', icon: Sun, isHero: true },
+  { key: 'today', title: 'Today', icon: Sun },
   { key: 'tomorrow', title: 'Tomorrow', icon: Sunrise },
   { key: 'this_week', title: 'This Week', icon: CalendarDays },
   { key: 'this_month', title: 'This Month', icon: CalendarRange },
@@ -86,11 +85,10 @@ const RichExpandingEditor: React.FC<{
   initialContent: string;
   onChange: (val: string) => void;
   hintLines: string[];
-  isHero?: boolean;
   className?: string;
   minHeight?: number;
   onFocus?: (el: HTMLElement) => void;
-}> = ({ initialContent, onChange, hintLines, isHero = false, className = '', minHeight = 90, onFocus }) => {
+}> = ({ initialContent, onChange, hintLines, className = '', minHeight = 90, onFocus }) => {
   const editorRef = useRef<HTMLDivElement>(null);
   const [hasText, setHasText] = useState<boolean>(() => !isHtmlEmpty(initialContent));
 
@@ -105,9 +103,7 @@ const RichExpandingEditor: React.FC<{
     <div className="relative w-full">
       {!hasText && hintLines && hintLines.length > 0 && (
         <div
-          className={`pointer-events-none select-none absolute top-0 left-0 right-0 text-[var(--text-secondary)] opacity-40 leading-[1.7] space-y-0.5 ${
-            isHero ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
-          }`}
+          className="pointer-events-none select-none absolute top-0 left-0 right-0 text-[var(--text-secondary)] opacity-40 leading-[1.7] space-y-0.5 text-xs sm:text-sm"
         >
           {hintLines.map((line, idx) => (
             <div
@@ -196,64 +192,9 @@ export const HorizonTodo: React.FC<HorizonTodoProps> = () => {
 
   return (
     <div className="space-y-4 pb-14 font-sans">
-      {/* 1. HERO CARD: Today */}
-      {HORIZON_SECTIONS.filter(s => s.isHero).map(section => {
-        const content = data[section.key] || '';
-        const lineCount = getLineCount(content);
-        const hasActiveReminder = reminders[section.key]?.enabled;
-
-        return (
-          <div key={section.key} className="neo-card overflow-hidden">
-            {/* Header Area */}
-            <div className="px-5 pt-4 pb-3 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-black text-[var(--text-primary)]">
-                  {section.title}
-                </h2>
-                <span className="text-xs font-bold text-[#ff5e1a]">
-                  {lineCount === 0 ? 'No tasks' : lineCount === 1 ? '1 task active' : `${lineCount} tasks active`}
-                </span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  soundService.triggerHaptic(15);
-                  setModalSection({ key: section.key, title: section.title });
-                }}
-                title="Set Reminder"
-                className={`p-2.5 rounded-2xl border transition-all active:scale-90 ${
-                  hasActiveReminder
-                    ? 'bg-[#ff5e1a] text-white border-[#ff5e1a] shadow-md shadow-[#ff5e1a]/30'
-                    : 'bg-[var(--bg-main)] text-[var(--text-secondary)] border-[var(--border-soft)] hover:text-[#ff5e1a]'
-                }`}
-              >
-                <Bell className={`w-4 h-4 ${hasActiveReminder ? 'fill-current' : ''}`} />
-              </button>
-            </div>
-
-            {/* Edge-to-edge expanded typing canvas with distinct background & zero side margins */}
-            <div className="w-full bg-[var(--bg-main)]/70 dark:bg-[var(--bg-main)] border-t border-[var(--border-soft)] px-5 py-4 focus-within:bg-[var(--bg-main)] transition-colors">
-              <RichExpandingEditor
-                initialContent={content}
-                onFocus={(el) => {
-                  setActiveElement(el);
-                  setActiveKey(section.key);
-                }}
-                onChange={(val) => handleChange(section.key, val)}
-                hintLines={HORIZON_HINTS[section.key]}
-                isHero={true}
-                minHeight={130}
-                className="w-full bg-transparent text-[var(--text-primary)] p-0 outline-none text-sm sm:text-base font-bold leading-relaxed transition-colors border-none"
-              />
-            </div>
-          </div>
-        );
-      })}
-
-      {/* 2. OTHER TIME PERIODS */}
+      {/* 5 TIME HORIZON SECTIONS (UNIFORM SIZING & STYLING) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {HORIZON_SECTIONS.filter(s => !s.isHero).map(section => {
+        {HORIZON_SECTIONS.map(section => {
           const content = data[section.key] || '';
           const lineCount = getLineCount(content);
           const hasActiveReminder = reminders[section.key]?.enabled;
@@ -298,7 +239,6 @@ export const HorizonTodo: React.FC<HorizonTodoProps> = () => {
                   }}
                   onChange={(val) => handleChange(section.key, val)}
                   hintLines={HORIZON_HINTS[section.key]}
-                  isHero={false}
                   minHeight={105}
                   className="w-full bg-transparent text-[var(--text-primary)] p-0 outline-none text-xs sm:text-sm font-bold leading-relaxed transition-colors border-none"
                 />

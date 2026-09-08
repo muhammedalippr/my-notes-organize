@@ -103,19 +103,7 @@ const DEFAULT_MATRIX_DATA: MatrixData = {
   not_important_not_urgent: "(Sample list)\n• Mindless video scrolling\n• Cleaning unnecessary old files\n• Watching random TV reruns",
 };
 
-const DEFAULT_SHOPPING: ShoppingItem[] = [
-  // Local Market
-  { id: 's1', name: 'Milk', quantity: 500, unit: 'ml', market: 'local', completed: false, createdAt: new Date().toISOString() },
-  { id: 's2', name: 'Egg', quantity: 5, unit: 'nos', market: 'local', completed: false, createdAt: new Date().toISOString() },
-  { id: 's3', name: 'Tomato', quantity: 2, unit: 'kg', market: 'local', completed: false, createdAt: new Date().toISOString() },
-
-  // City Market
-  { id: 's4', name: 'Washing machine', quantity: 1, unit: 'nos', market: 'city', completed: false, createdAt: new Date().toISOString() },
-  { id: 's5', name: 'Fry pan', quantity: 1, unit: 'nos', market: 'city', completed: false, createdAt: new Date().toISOString() },
-
-  // Others Market
-  { id: 's6', name: 'Laptop', quantity: 1, unit: 'nos', market: 'other', completed: false, createdAt: new Date().toISOString() },
-];
+const DEFAULT_SHOPPING: ShoppingItem[] = [];
 
 function getSampleDate(daysOffset: number, hours: number, minutes: number): string {
   const d = new Date();

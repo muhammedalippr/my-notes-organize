@@ -109,7 +109,7 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
               required
               value={personName}
               onChange={(e) => setPersonName(e.target.value)}
-              placeholder="e.g., Alex Johnson"
+              placeholder="Name / investment etc"
               className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-3 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-bold transition-all"
             />
           </div>

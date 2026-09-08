@@ -135,7 +135,7 @@ export const ShoppingList: React.FC = () => {
         </div>
 
         {filteredItems.length === 0 ? (
-          <div className="neo-card p-8 text-center space-y-2">
+          <div className="neo-card !rounded-2xl p-8 text-center space-y-2">
             <Package className="w-8 h-8 text-[var(--text-secondary)] mx-auto opacity-40" />
             <p className="text-xs font-bold text-[var(--text-secondary)]">No items in this market yet</p>
           </div>
@@ -146,7 +146,7 @@ export const ShoppingList: React.FC = () => {
               <div
                 key={item.id}
                 onClick={() => handleItemClick(item)}
-                className="neo-card p-4 flex items-center justify-between gap-3 cursor-pointer transition-all hover:border-[#ff5e1a]/40"
+                className="neo-card !rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer transition-all hover:border-[#ff5e1a]/40"
               >
                 <div className="flex items-center gap-3.5 min-w-0 flex-1">
                   <button

@@ -121,7 +121,7 @@ export const MindMapEditor: React.FC<MindMapEditorProps> = ({
     const NODE_W = 160;
     const NODE_H = 50;
     const HORIZONTAL_GAP = 120;
-    const VERTICAL_GAP = 30;
+    const VERTICAL_GAP = 36;
 
     // Calculate height required for a subtree
     const calculateSubtreeHeight = (nodeId: string): number => {
@@ -565,7 +565,7 @@ export const MindMapEditor: React.FC<MindMapEditorProps> = ({
                   transform: `translate(${pos.x - pos.width / 2}px, ${pos.y - pos.height / 2}px)`,
                   width: `${pos.width}px`,
                 }}
-                className="absolute pointer-events-auto"
+                className={`absolute pointer-events-auto ${isSelected ? 'z-50' : 'z-10'}`}
               >
                 {/* Node Box */}
                 <div
@@ -599,7 +599,7 @@ export const MindMapEditor: React.FC<MindMapEditorProps> = ({
                 {isSelected && (
                   <div
                     onClick={(e) => e.stopPropagation()}
-                    className="node-action-popup absolute -top-13 left-1/2 -translate-x-1/2 z-40 bg-[var(--bg-surface)]/95 backdrop-blur-md border border-[var(--border-soft)] rounded-full px-2 py-1 shadow-2xl flex items-center gap-1 animate-in fade-in zoom-in-90 duration-150 whitespace-nowrap"
+                    className="node-action-popup absolute bottom-[calc(100%+10px)] left-1/2 -translate-x-1/2 z-50 bg-[var(--bg-surface)]/95 backdrop-blur-md border border-[var(--border-soft)] rounded-full px-2 py-1 shadow-2xl flex items-center gap-1 animate-in fade-in zoom-in-90 duration-150 whitespace-nowrap"
                   >
                     {/* Add Child Branch */}
                     <button
@@ -663,7 +663,7 @@ export const MindMapEditor: React.FC<MindMapEditorProps> = ({
                     {isColorPickerOpen && (
                       <div
                         onClick={(e) => e.stopPropagation()}
-                        className="absolute -top-11 left-1/2 -translate-x-1/2 bg-[var(--bg-surface)] border border-[var(--border-soft)] px-2.5 py-1.5 rounded-full shadow-2xl flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-100"
+                        className="absolute bottom-[calc(100%+8px)] left-1/2 -translate-x-1/2 bg-[var(--bg-surface)] border border-[var(--border-soft)] px-2.5 py-1.5 rounded-full shadow-2xl flex items-center gap-1.5 animate-in fade-in zoom-in-95 duration-100 z-50"
                       >
                         {COLOR_PALETTE.map((p) => (
                           <button

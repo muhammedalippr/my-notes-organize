@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { backButtonService } from '../../services/soundService';
 import { X, Check, User, Phone, FileText } from 'lucide-react';
 
@@ -75,7 +75,7 @@ export const AddAccountModal: React.FC<AddAccountModalProps> = ({
               required
               value={personName}
               onChange={(e) => setPersonName(e.target.value)}
-              placeholder="e.g. Rahul Sharma, ABC Store..."
+              placeholder="Name / investment etc"
               className="w-full p-3.5 rounded-2xl bg-[var(--bg-main)] border border-[var(--border-soft)] text-sm font-bold text-[var(--text-primary)] placeholder:text-[var(--text-secondary)]/50 focus:border-[#ff5e1a] outline-none transition-colors"
             />
           </div>
