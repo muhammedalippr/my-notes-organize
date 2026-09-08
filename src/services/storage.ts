@@ -87,11 +87,11 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 const DEFAULT_HORIZON: HorizonData = {
-  today: "<div>(Sample list)</div><div>• Buy fresh vegetables & milk</div><div>• Call plumber for kitchen sink leak</div><div>• Pay electricity & wifi bill</div><div>• 30 mins evening walk</div>",
-  tomorrow: "<div>(Sample list)</div><div>• Car wash & check tire pressure</div><div>• Book doctor appointment</div><div>• Pick up dry cleaning</div>",
-  this_week: "<div>(Sample list)</div><div>• Organize clothes wardrobe</div><div>• Grocery restock from supermarket</div><div>• Settle credit card bill</div>",
-  this_month: "<div>(Sample list)</div><div>• Vehicle servicing & oil change</div><div>• Deep clean house & balcony</div><div>• Review monthly family expenses</div>",
-  this_year: "<div>(Sample list)</div><div>• Family vacation trip</div><div>• Save emergency fund target</div><div>• Complete health checkup</div>",
+  today: "",
+  tomorrow: "",
+  this_week: "",
+  this_month: "",
+  this_year: "",
 };
 
 const DEFAULT_MATRIX_DATA: MatrixData = {
@@ -337,17 +337,41 @@ export const StorageService = {
     for (const k of keys) {
       const val = migrated[k];
       if (val && typeof val === 'string') {
-        if (val.includes('\n') && !val.includes('<div>') && !val.includes('<p>')) {
+        if (val.includes('(Sample list)') || val.includes('Sample list')) {
+          // Remove legacy hardcoded sample list so user gets the new hint placeholder
+          const cleaned = val
+            .replace(/<div>\(Sample list\)<\/div>/gi, '')
+            .replace(/\(Sample list\)/gi, '')
+            .replace(/<div>• Buy fresh vegetables &amp; milk<\/div>/gi, '')
+            .replace(/<div>• Buy fresh vegetables & milk<\/div>/gi, '')
+            .replace(/<div>• Call plumber for kitchen sink leak<\/div>/gi, '')
+            .replace(/<div>• Pay electricity &amp; wifi bill<\/div>/gi, '')
+            .replace(/<div>• Pay electricity & wifi bill<\/div>/gi, '')
+            .replace(/<div>• 30 mins evening walk<\/div>/gi, '')
+            .replace(/<div>• Car wash &amp; check tire pressure<\/div>/gi, '')
+            .replace(/<div>• Car wash & check tire pressure<\/div>/gi, '')
+            .replace(/<div>• Book doctor appointment<\/div>/gi, '')
+            .replace(/<div>• Pick up dry cleaning<\/div>/gi, '')
+            .replace(/<div>• Organize clothes wardrobe<\/div>/gi, '')
+            .replace(/<div>• Grocery restock from supermarket<\/div>/gi, '')
+            .replace(/<div>• Settle credit card bill<\/div>/gi, '')
+            .replace(/<div>• Vehicle servicing &amp; oil change<\/div>/gi, '')
+            .replace(/<div>• Vehicle servicing & oil change<\/div>/gi, '')
+            .replace(/<div>• Deep clean house &amp; balcony<\/div>/gi, '')
+            .replace(/<div>• Deep clean house & balcony<\/div>/gi, '')
+            .replace(/<div>• Review monthly family expenses<\/div>/gi, '')
+            .replace(/<div>• Family vacation trip<\/div>/gi, '')
+            .replace(/<div>• Save emergency fund target<\/div>/gi, '')
+            .replace(/<div>• Complete health checkup<\/div>/gi, '');
+          const plain = cleaned.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+          migrated[k] = plain ? cleaned.trim() : '';
+          changed = true;
+        } else if (val.includes('\n') && !val.includes('<div>') && !val.includes('<p>')) {
           migrated[k] = val
             .split('\n')
             .filter(line => line.length > 0)
             .map(line => `<div>${line}</div>`)
             .join('');
-          changed = true;
-        } else if (!val.includes('<div>') && !val.includes('<p>') && val.includes('•') && val.includes('(Sample list)')) {
-          // If sample list is squashed into single line
-          const lines = val.replace('(Sample list)', '').split('•').map(s => s.trim()).filter(Boolean);
-          migrated[k] = `<div>(Sample list)</div>` + lines.map(line => `<div>• ${line}</div>`).join('');
           changed = true;
         }
       }

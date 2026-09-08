@@ -26,7 +26,17 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onSelectView, settings }
   const notes = StorageService.getNotes();
   const mindmaps = StorageService.getMindMaps();
 
-  const todayTasks = (horizons.today || '').trim().split('\n').filter((l: string) => l.trim() && !l.includes('(Sample list)'));
+  const todayPlain = (horizons.today || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<[^>]*>?/gm, '')
+    .replace(/&nbsp;/gi, ' ')
+    .trim();
+  const todayTasks = todayPlain
+    .split('\n')
+    .map((l: string) => l.trim())
+    .filter((l: string) => l.length > 0 && !l.includes('(Sample list)') && !l.toLowerCase().includes('sample list'));
   
   const matrixLines = [
     matrix.important_urgent || '',

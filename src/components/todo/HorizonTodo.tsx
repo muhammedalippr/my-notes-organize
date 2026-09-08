@@ -39,38 +39,107 @@ interface TodoReminderConfig {
   dateTime: string;
 }
 
+export const HORIZON_HINTS: Record<HorizonType, string[]> = {
+  today: [
+    "Write your today's plans here , Sample list :",
+    "• Buy fresh vegetables & milk",
+    "• Call plumber for kitchen sink leak",
+    "• Pay electricity & wifi bill",
+    "• 30 mins evening walk",
+  ],
+  tomorrow: [
+    "Write your tomorrow's plans here , Sample list :",
+    "• Car wash & check tire pressure",
+    "• Book doctor appointment",
+    "• Pick up dry cleaning",
+  ],
+  this_week: [
+    "Write your this week's plans here , Sample list :",
+    "• Organize clothes wardrobe",
+    "• Grocery restock from supermarket",
+    "• Settle credit card bill",
+  ],
+  this_month: [
+    "Write your this month's plans here , Sample list :",
+    "• Vehicle servicing & oil change",
+    "• Deep clean house & balcony",
+    "• Review monthly family expenses",
+  ],
+  this_year: [
+    "Write your this year's plans here , Sample list :",
+    "• Family vacation trip",
+    "• Save emergency fund target",
+    "• Complete health checkup",
+  ],
+};
+
+const isHtmlEmpty = (html: string | null | undefined): boolean => {
+  if (!html) return true;
+  const plain = html
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .trim();
+  return plain.length === 0;
+};
+
 const RichExpandingEditor: React.FC<{
   initialContent: string;
   onChange: (val: string) => void;
-  placeholder: string;
+  hintLines: string[];
+  isHero?: boolean;
   className?: string;
   minHeight?: number;
   onFocus?: (el: HTMLElement) => void;
-}> = ({ initialContent, onChange, placeholder, className = '', minHeight = 90, onFocus }) => {
+}> = ({ initialContent, onChange, hintLines, isHero = false, className = '', minHeight = 90, onFocus }) => {
   const editorRef = useRef<HTMLDivElement>(null);
+  const [hasText, setHasText] = useState<boolean>(() => !isHtmlEmpty(initialContent));
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== initialContent) {
       editorRef.current.innerHTML = initialContent || '';
     }
+    setHasText(!isHtmlEmpty(initialContent));
   }, [initialContent]);
 
   return (
-    <div
-      ref={editorRef}
-      contentEditable
-      suppressContentEditableWarning
-      onFocus={(e) => {
-        if (onFocus) onFocus(e.currentTarget);
-      }}
-      onKeyDown={(e) => handleEditorKeyDown(e, onChange)}
-      onInput={(e) => {
-        onChange(e.currentTarget.innerHTML);
-      }}
-      data-placeholder={placeholder}
-      style={{ minHeight: `${minHeight}px` }}
-      className={`rich-note-editor ${className}`}
-    />
+    <div className="relative w-full">
+      {!hasText && hintLines && hintLines.length > 0 && (
+        <div
+          className={`pointer-events-none select-none absolute top-0 left-0 right-0 text-[var(--text-secondary)] opacity-40 leading-[1.7] space-y-0.5 ${
+            isHero ? 'text-sm sm:text-base' : 'text-xs sm:text-sm'
+          }`}
+        >
+          {hintLines.map((line, idx) => (
+            <div
+              key={idx}
+              className={idx === 0 ? 'font-bold text-[var(--text-primary)] opacity-75 pb-0.5' : 'font-medium'}
+            >
+              {line}
+            </div>
+          ))}
+        </div>
+      )}
+      <div
+        ref={editorRef}
+        contentEditable
+        suppressContentEditableWarning
+        onFocus={(e) => {
+          if (onFocus) onFocus(e.currentTarget);
+        }}
+        onKeyDown={(e) => handleEditorKeyDown(e, (newVal) => {
+          setHasText(!isHtmlEmpty(newVal));
+          onChange(newVal);
+        })}
+        onInput={(e) => {
+          const val = e.currentTarget.innerHTML;
+          const empty = isHtmlEmpty(val);
+          setHasText(!empty);
+          onChange(empty ? '' : val);
+        }}
+        style={{ minHeight: `${minHeight}px` }}
+        className={`rich-note-editor ${className}`}
+      />
+    </div>
   );
 };
 
@@ -115,12 +184,13 @@ export const HorizonTodo: React.FC<HorizonTodoProps> = () => {
       .replace(/<\/div>/gi, '\n')
       .replace(/<\/p>/gi, '\n')
       .replace(/<[^>]*>?/gm, '')
+      .replace(/&nbsp;/gi, ' ')
       .trim();
     if (!plain) return 0;
     const lines = plain
       .split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0 && !line.includes('(Sample list)'));
+      .filter(line => line.length > 0 && !line.includes('(Sample list)') && !line.toLowerCase().includes('sample list'));
     return lines.length;
   };
 
@@ -171,8 +241,9 @@ export const HorizonTodo: React.FC<HorizonTodoProps> = () => {
                   setActiveKey(section.key);
                 }}
                 onChange={(val) => handleChange(section.key, val)}
-                placeholder="What are your goals today?"
-                minHeight={90}
+                hintLines={HORIZON_HINTS[section.key]}
+                isHero={true}
+                minHeight={130}
                 className="w-full bg-transparent text-[var(--text-primary)] p-0 outline-none text-sm sm:text-base font-bold leading-relaxed transition-colors border-none"
               />
             </div>
@@ -226,8 +297,9 @@ export const HorizonTodo: React.FC<HorizonTodoProps> = () => {
                     setActiveKey(section.key);
                   }}
                   onChange={(val) => handleChange(section.key, val)}
-                  placeholder={`Plan for ${section.title.toLowerCase()}...`}
-                  minHeight={65}
+                  hintLines={HORIZON_HINTS[section.key]}
+                  isHero={false}
+                  minHeight={105}
                   className="w-full bg-transparent text-[var(--text-primary)] p-0 outline-none text-xs sm:text-sm font-bold leading-relaxed transition-colors border-none"
                 />
               </div>
