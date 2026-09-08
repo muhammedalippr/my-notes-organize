@@ -4,6 +4,7 @@ import {
   MatrixData,
   ShoppingItem, 
   AppEvent, 
+  FinanceAccount,
   FinanceRecord, 
   NoteCategory, 
   Note, 
@@ -17,6 +18,7 @@ const STORAGE_KEYS = {
   SHOPPING_ITEMS: 'omni_shopping_items_v3',
   EVENTS: 'omni_events',
   FINANCE: 'omni_finance',
+  FINANCE_ACCOUNTS: 'omni_finance_accounts',
   CATEGORIES: 'omni_categories',
   NOTES: 'omni_notes',
   NOTEPAD: 'omni_notepad',
@@ -122,72 +124,11 @@ function getSampleDate(daysOffset: number, hours: number, minutes: number): stri
   return d.toISOString().slice(0, 16);
 }
 
-const DEFAULT_EVENTS: AppEvent[] = [
-  {
-    id: 'e1',
-    title: 'Client Strategy Review',
-    dateTime: getSampleDate(1, 14, 30),
-    category: 'Work',
-    location: 'Conference Room B / Video Call',
-    reminderMinutesBefore: 30,
-    notes: 'Bring updated performance charts',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'e2',
-    title: 'Vehicle Maintenance Service',
-    dateTime: getSampleDate(3, 10, 0),
-    category: 'Personal',
-    location: 'Central Auto Care',
-    reminderMinutesBefore: 60,
-    notes: 'Check tire alignment and oil replacement',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'e3',
-    title: 'Past Project Retrospective',
-    dateTime: getSampleDate(-2, 16, 0),
-    category: 'Work',
-    location: 'Main Hall',
-    reminderMinutesBefore: 15,
-    notes: 'Completed session feedback logged',
-    createdAt: new Date().toISOString(),
-  },
-];
+const DEFAULT_EVENTS: AppEvent[] = [];
 
-const DEFAULT_FINANCE: FinanceRecord[] = [
-  {
-    id: 'f1',
-    personName: 'Person 1',
-    amount: 2000,
-    direction: 'received',
-    date: new Date().toISOString().slice(0, 10),
-    dueDate: getSampleDate(7, 0, 0).slice(0, 10),
-    status: 'pending',
-    notes: 'Emergency fund',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'f2',
-    personName: 'Investment',
-    amount: 100000,
-    direction: 'gave',
-    date: getSampleDate(-3, 0, 0).slice(0, 10),
-    status: 'pending',
-    notes: 'Mutual fund returns',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'f3',
-    personName: 'Cash Savings',
-    amount: 20000,
-    direction: 'gave',
-    date: getSampleDate(-10, 0, 0).slice(0, 10),
-    status: 'pending',
-    notes: 'Monthly salary',
-    createdAt: new Date().toISOString(),
-  },
-];
+const DEFAULT_ACCOUNTS: FinanceAccount[] = [];
+
+const DEFAULT_FINANCE: FinanceRecord[] = [];
 
 const DEFAULT_CATEGORIES: NoteCategory[] = [
   { id: 'cat_work', name: 'Work & Projects', color: '#6366f1', createdAt: new Date().toISOString() },
@@ -198,19 +139,10 @@ const DEFAULT_CATEGORIES: NoteCategory[] = [
 
 const DEFAULT_NOTES: Note[] = [
   {
-    id: 'n1',
-    title: 'Product Architecture Outline',
-    content: "Key principles for clean, high-performance applications:\n- Modular UI components with decoupled state\n- Zero layout shift and instant local persistence\n- Clean typography and distraction-free dark interface\n- Offline-first execution capability",
+    id: 'n_sample',
+    title: 'Sample Note',
+    content: '<div class="note-title-banner">Extended Keyboard Features</div><div>Tap the toolbar above your keyboard to format notes:</div><div><br></div><div><b>T</b> - Formats line as highlighted Title Banner</div><div><b>B</b> - Toggle <b>bold text</b> styling</div><div><b>U</b> - Toggle <u>underlined text</u> styling</div><div><b>S</b> - Toggle <s>strikethrough text</s> styling</div><div><br></div><div>• <b>Bullet:</b> Standard list for items &amp; thoughts</div><div>&gt; <b>Quote:</b> Highlights quotes, steps &amp; actions</div><div>👉 <b>Point:</b> Focuses on key tips &amp; priorities</div><div>✅ <b>Check:</b> Marks completed tasks &amp; milestones</div><div>⭕ <b>Circle:</b> Tracks open or pending tasks</div>',
     categoryId: 'cat_work',
-    isPinned: true,
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'n2',
-    title: 'Weekly Focus & Routine',
-    content: "Morning: Deep focus block (2 hours)\nAfternoon: Team communications and task reviews\nEvening: Quick wrap-up and planning for tomorrow",
-    categoryId: 'cat_personal',
     isPinned: false,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
@@ -222,83 +154,97 @@ const DEFAULT_NOTEPAD = "Quick Scratchpad\n- Clean workspace for temporary thoug
 const DEFAULT_MINDMAPS: MindMap[] = [
   {
     id: 'mm_sample_1',
-    title: 'Product Strategy & Launch',
+    title: 'Sample',
     rootNodeId: 'root_1',
     nodes: {
       'root_1': {
         id: 'root_1',
-        text: 'Product Strategy',
+        text: 'Mind Map Guide',
         parentId: null,
         color: '#ff5e1a',
-        childrenIds: ['branch_1', 'branch_2', 'branch_3', 'branch_4'],
+        childrenIds: ['branch_add', 'branch_nav', 'branch_style', 'branch_org'],
       },
-      'branch_1': {
-        id: 'branch_1',
-        text: 'Design & UX',
+      'branch_add': {
+        id: 'branch_add',
+        text: 'Add & Edit Nodes',
         parentId: 'root_1',
         color: '#8b5cf6',
-        childrenIds: ['sub_1_1', 'sub_1_2'],
+        childrenIds: ['sub_add_1', 'sub_add_2'],
       },
-      'sub_1_1': {
-        id: 'sub_1_1',
-        text: 'Neo-minimalist UI',
-        parentId: 'branch_1',
+      'sub_add_1': {
+        id: 'sub_add_1',
+        text: 'Tap + to add child branch',
+        parentId: 'branch_add',
         color: '#8b5cf6',
         childrenIds: [],
       },
-      'sub_1_2': {
-        id: 'sub_1_2',
-        text: 'Mobile Ergonomics',
-        parentId: 'branch_1',
+      'sub_add_2': {
+        id: 'sub_add_2',
+        text: 'Tap Edit or double-tap to rename',
+        parentId: 'branch_add',
         color: '#8b5cf6',
         childrenIds: [],
       },
-      'branch_2': {
-        id: 'branch_2',
-        text: 'Engineering',
+      'branch_nav': {
+        id: 'branch_nav',
+        text: 'Canvas Navigation',
         parentId: 'root_1',
         color: '#3b82f6',
-        childrenIds: ['sub_2_1', 'sub_2_2'],
+        childrenIds: ['sub_nav_1', 'sub_nav_2'],
       },
-      'sub_2_1': {
-        id: 'sub_2_1',
-        text: 'Offline-first Storage',
-        parentId: 'branch_2',
+      'sub_nav_1': {
+        id: 'sub_nav_1',
+        text: 'Drag canvas to pan around',
+        parentId: 'branch_nav',
         color: '#3b82f6',
         childrenIds: [],
       },
-      'sub_2_2': {
-        id: 'sub_2_2',
-        text: 'Capacitor Android Core',
-        parentId: 'branch_2',
+      'sub_nav_2': {
+        id: 'sub_nav_2',
+        text: 'Pinch or use +/- to zoom',
+        parentId: 'branch_nav',
         color: '#3b82f6',
         childrenIds: [],
       },
-      'branch_3': {
-        id: 'branch_3',
-        text: 'Marketing',
+      'branch_style': {
+        id: 'branch_style',
+        text: 'Colors & Styling',
         parentId: 'root_1',
         color: '#10b981',
-        childrenIds: ['sub_3_1'],
+        childrenIds: ['sub_style_1', 'sub_style_2'],
       },
-      'sub_3_1': {
-        id: 'sub_3_1',
-        text: 'App Store Optimization',
-        parentId: 'branch_3',
+      'sub_style_1': {
+        id: 'sub_style_1',
+        text: 'Palette button changes node color',
+        parentId: 'branch_style',
         color: '#10b981',
         childrenIds: [],
       },
-      'branch_4': {
-        id: 'branch_4',
-        text: 'Key Milestones',
+      'sub_style_2': {
+        id: 'sub_style_2',
+        text: 'Auto-curved connecting branches',
+        parentId: 'branch_style',
+        color: '#10b981',
+        childrenIds: [],
+      },
+      'branch_org': {
+        id: 'branch_org',
+        text: 'Organize & Manage',
         parentId: 'root_1',
         color: '#f59e0b',
-        childrenIds: ['sub_4_1'],
+        childrenIds: ['sub_org_1', 'sub_org_2'],
       },
-      'sub_4_1': {
-        id: 'sub_4_1',
-        text: 'Beta Release v1.0',
-        parentId: 'branch_4',
+      'sub_org_1': {
+        id: 'sub_org_1',
+        text: 'Tap node to select & highlight',
+        parentId: 'branch_org',
+        color: '#f59e0b',
+        childrenIds: [],
+      },
+      'sub_org_2': {
+        id: 'sub_org_2',
+        text: 'Trash button deletes node & branch',
+        parentId: 'branch_org',
         color: '#f59e0b',
         childrenIds: [],
       },
@@ -425,56 +371,51 @@ export const StorageService = {
 
   // Events
   getEvents(): AppEvent[] {
-    return this.get<AppEvent[]>(STORAGE_KEYS.EVENTS, DEFAULT_EVENTS);
+    const list = this.get<AppEvent[]>(STORAGE_KEYS.EVENTS, DEFAULT_EVENTS);
+    const cleaned = list.filter(e => 
+      e.id !== 'e1' && e.id !== 'e2' && e.id !== 'e3' &&
+      !e.title.includes('Client Strategy Review') && 
+      !e.title.includes('Vehicle Maintenance Service') && 
+      !e.title.includes('Past Project Retrospective')
+    );
+    if (cleaned.length !== list.length) {
+      this.saveEvents(cleaned);
+    }
+    return cleaned;
   },
   saveEvents(events: AppEvent[]): void {
     this.set(STORAGE_KEYS.EVENTS, events);
   },
 
-  // Finance
+  // Finance Accounts
+  getFinanceAccounts(): FinanceAccount[] {
+    const accounts = this.get<FinanceAccount[]>(STORAGE_KEYS.FINANCE_ACCOUNTS, DEFAULT_ACCOUNTS);
+    const cleaned = accounts.filter(a => 
+      a.name !== 'Person 1' && a.name !== 'Investment' && a.name !== 'Cash Savings' &&
+      a.name !== 'Rahul Sharma' && a.name !== 'Amit Verma' && a.name !== 'Priya Nair'
+    );
+    if (cleaned.length !== accounts.length) {
+      this.saveFinanceAccounts(cleaned);
+    }
+    return cleaned;
+  },
+  saveFinanceAccounts(accounts: FinanceAccount[]): void {
+    this.set(STORAGE_KEYS.FINANCE_ACCOUNTS, accounts);
+  },
+
+  // Finance Transactions
   getFinance(): FinanceRecord[] {
     const list = this.get<FinanceRecord[]>(STORAGE_KEYS.FINANCE, DEFAULT_FINANCE);
-    // Migrate legacy demo names & values if still present
-    let modified = false;
-    const migrated = list.map(item => {
-      if (item.personName === 'Rahul Sharma' || (item.personName === 'Person 1' && item.amount === 2500)) {
-        modified = true;
-        return {
-          ...item,
-          personName: 'Person 1',
-          amount: 2000,
-          direction: 'received' as const,
-          notes: 'Emergency fund',
-        };
-      }
-      if (item.personName === 'Amit Verma' || (item.personName === 'Investment' && item.amount === 1200)) {
-        modified = true;
-        return {
-          ...item,
-          personName: 'Investment',
-          amount: 100000,
-          direction: 'gave' as const,
-          notes: 'Mutual fund returns',
-        };
-      }
-      if (item.personName === 'Priya Nair' || (item.personName === 'Cash Savings' && item.amount === 800)) {
-        modified = true;
-        return {
-          ...item,
-          personName: 'Cash Savings',
-          amount: 20000,
-          direction: 'gave' as const,
-          status: 'pending' as const,
-          notes: 'Monthly salary',
-        };
-      }
-      return item;
-    });
-    if (modified) {
-      this.saveFinance(migrated);
-      return migrated;
+    const cleaned = list.filter(item => 
+      item.id !== 'f1' && item.id !== 'f2' && item.id !== 'f3' &&
+      item.personName !== 'Person 1' && item.personName !== 'Investment' && item.personName !== 'Cash Savings' &&
+      item.personName !== 'Rahul Sharma' && item.personName !== 'Amit Verma' && item.personName !== 'Priya Nair' &&
+      item.amount > 0
+    );
+    if (cleaned.length !== list.length) {
+      this.saveFinance(cleaned);
     }
-    return list;
+    return cleaned;
   },
   saveFinance(records: FinanceRecord[]): void {
     this.set(STORAGE_KEYS.FINANCE, records);
@@ -489,7 +430,15 @@ export const StorageService = {
   },
 
   getNotes(): Note[] {
-    return this.get<Note[]>(STORAGE_KEYS.NOTES, DEFAULT_NOTES);
+    const list = this.get<Note[]>(STORAGE_KEYS.NOTES, DEFAULT_NOTES);
+    const hasOldSamples = list.some(n => n.id === 'n1' || n.id === 'n2' || n.title === 'Product Architecture Outline' || n.title === 'Weekly Focus & Routine');
+    if (hasOldSamples) {
+      const userNotes = list.filter(n => n.id !== 'n1' && n.id !== 'n2' && n.title !== 'Product Architecture Outline' && n.title !== 'Weekly Focus & Routine');
+      const updated = [DEFAULT_NOTES[0], ...userNotes];
+      this.saveNotes(updated);
+      return updated;
+    }
+    return list;
   },
   saveNotes(notes: Note[]): void {
     this.set(STORAGE_KEYS.NOTES, notes);
@@ -497,7 +446,15 @@ export const StorageService = {
 
   // Mind Maps
   getMindMaps(): MindMap[] {
-    return this.get<MindMap[]>(STORAGE_KEYS.MINDMAPS, DEFAULT_MINDMAPS);
+    const list = this.get<MindMap[]>(STORAGE_KEYS.MINDMAPS, DEFAULT_MINDMAPS);
+    const hasOldSample = list.some(m => m.title === 'Product Strategy & Launch' || m.id === 'mm_sample_1');
+    if (hasOldSample) {
+      const userMaps = list.filter(m => m.title !== 'Product Strategy & Launch' && m.id !== 'mm_sample_1');
+      const updated = [DEFAULT_MINDMAPS[0], ...userMaps];
+      this.saveMindMaps(updated);
+      return updated;
+    }
+    return list;
   },
   saveMindMaps(mindmaps: MindMap[]): void {
     this.set(STORAGE_KEYS.MINDMAPS, mindmaps);

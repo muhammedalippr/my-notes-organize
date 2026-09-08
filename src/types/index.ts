@@ -70,6 +70,14 @@ export interface AppEvent {
 
 export type FinanceDirection = 'gave' | 'received'; // 'gave' = Lent (To Receive), 'received' = Borrowed (To Pay)
 
+export interface FinanceAccount {
+  id: string;
+  name: string;
+  contact?: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface FinanceRecord {
   id: string;
   personName: string;

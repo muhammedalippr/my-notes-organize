@@ -124,7 +124,7 @@ export const PersonHistoryModal: React.FC<PersonHistoryModalProps> = ({
           </div>
 
           {personRecords.length === 0 ? (
-            <div className="neo-card p-8 text-center space-y-2">
+            <div className="neo-card !rounded-2xl p-8 text-center space-y-2">
               <p className="text-xs font-bold text-[var(--text-secondary)]">No transactions recorded yet</p>
             </div>
           ) : (
@@ -137,10 +137,10 @@ export const PersonHistoryModal: React.FC<PersonHistoryModalProps> = ({
                     soundService.triggerHaptic(15);
                     onEditRecord(record);
                   }}
-                  className="neo-card p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[#ff5e1a]/40 transition-all active:scale-[0.99]"
+                  className="neo-card !rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[#ff5e1a]/40 transition-all active:scale-[0.99]"
                 >
                   <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                       isGave ? 'bg-[#10b981]/15 text-[#10b981]' : 'bg-[#ef4444]/15 text-[#ef4444]'
                     }`}>
                       {isGave ? <ArrowUpRight className="w-5 h-5 stroke-[2.5]" /> : <ArrowDownLeft className="w-5 h-5 stroke-[2.5]" />}

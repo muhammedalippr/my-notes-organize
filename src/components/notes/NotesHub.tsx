@@ -10,6 +10,18 @@ interface NotesHubProps {
   onEditorStateChange?: (isOpen: boolean) => void;
 }
 
+const getPreviewText = (html: string) => {
+  if (!html) return 'Empty note...';
+  const text = html
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text || 'Empty note...';
+};
+
 export const NotesHub: React.FC<NotesHubProps> = ({ onEditorStateChange }) => {
   const [notes, setNotes] = useState<Note[]>(StorageService.getNotes());
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -175,7 +187,7 @@ export const NotesHub: React.FC<NotesHubProps> = ({ onEditorStateChange }) => {
                 </h3>
 
                 <p className="text-xs font-bold text-[var(--text-secondary)] line-clamp-3 mt-1.5 leading-relaxed">
-                  {note.content || 'Empty note...'}
+                  {getPreviewText(note.content)}
                 </p>
               </div>
             </div>

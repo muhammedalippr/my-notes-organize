@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FinanceRecord, AppSettings } from '../../types';
+import { FinanceRecord, FinanceAccount, AppSettings } from '../../types';
 import { StorageService } from '../../services/storage';
 import { soundService } from '../../services/soundService';
 import { AddFinanceModal } from './AddFinanceModal';
@@ -23,7 +23,8 @@ interface PersonSummary {
 }
 
 export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStateChange }) => {
-  const [records, setRecords] = useState<FinanceRecord[]>(StorageService.getFinance());
+  const [accounts, setAccounts] = useState<FinanceAccount[]>(() => StorageService.getFinanceAccounts());
+  const [records, setRecords] = useState<FinanceRecord[]>(() => StorageService.getFinance());
   const [filter, setFilter] = useState<'all' | 'gave' | 'received'>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
@@ -33,6 +34,11 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
   const [personToDelete, setPersonToDelete] = useState<string | null>(null);
 
   const currency = settings.currencySymbol || '₹';
+
+  const saveAccounts = (updated: FinanceAccount[]) => {
+    setAccounts(updated);
+    StorageService.saveFinanceAccounts(updated);
+  };
 
   const saveRecords = (updated: FinanceRecord[]) => {
     setRecords(updated);
@@ -55,6 +61,16 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
     newRecord: Omit<FinanceRecord, 'id' | 'createdAt' | 'status'>,
     editId?: string
   ) => {
+    const pName = newRecord.personName.trim();
+    if (pName && !accounts.some(a => a.name.toLowerCase() === pName.toLowerCase())) {
+      const newAcc: FinanceAccount = {
+        id: 'acc_' + Date.now(),
+        name: pName,
+        createdAt: new Date().toISOString(),
+      };
+      saveAccounts([newAcc, ...accounts]);
+    }
+
     if (editId) {
       const updated = records.map(r => r.id === editId ? { ...r, ...newRecord } : r);
       saveRecords(updated);
@@ -72,18 +88,19 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
   };
 
   const handleAddAccount = (personName: string, contact?: string, notes?: string) => {
-    const noteText = [contact ? `Contact: ${contact}` : '', notes || ''].filter(Boolean).join(' • ');
-    const record: FinanceRecord = {
-      id: 'fin_' + Date.now(),
-      personName,
-      amount: 0,
-      direction: 'gave',
-      date: new Date().toISOString().slice(0, 10),
-      status: 'pending',
-      notes: noteText || undefined,
-      createdAt: new Date().toISOString(),
-    };
-    saveRecords([record, ...records]);
+    const trimmed = personName.trim();
+    if (!trimmed) return;
+    const exists = accounts.some(a => a.name.toLowerCase() === trimmed.toLowerCase());
+    if (!exists) {
+      const newAcc: FinanceAccount = {
+        id: 'acc_' + Date.now(),
+        name: trimmed,
+        contact: contact?.trim(),
+        notes: notes?.trim(),
+        createdAt: new Date().toISOString(),
+      };
+      saveAccounts([newAcc, ...accounts]);
+    }
     soundService.triggerHaptic(20);
   };
 
@@ -95,16 +112,31 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
 
   const handleDeletePerson = (name: string) => {
     soundService.triggerHaptic(20);
-    const updated = records.filter(r => r.personName.toLowerCase() !== name.toLowerCase());
-    saveRecords(updated);
+    const updatedAccounts = accounts.filter(a => a.name.toLowerCase() !== name.toLowerCase());
+    saveAccounts(updatedAccounts);
+    const updatedRecords = records.filter(r => r.personName.toLowerCase() !== name.toLowerCase());
+    saveRecords(updatedRecords);
     if (activePersonName?.toLowerCase() === name.toLowerCase()) {
       handleClosePerson();
     }
     setPersonToDelete(null);
   };
 
-  // Group transactions by person
+  // Group transactions by person, preserving registered accounts even with 0 transactions
   const personMap = new Map<string, PersonSummary>();
+
+  accounts.forEach(acc => {
+    const key = acc.name.trim();
+    if (!key) return;
+    personMap.set(key.toLowerCase(), {
+      personName: key,
+      totalGave: 0,
+      totalReceived: 0,
+      netAmount: 0,
+      transactionCount: 0,
+      lastDate: acc.createdAt.slice(0, 10),
+    });
+  });
 
   records.forEach(r => {
     const key = r.personName.trim();
@@ -253,7 +285,7 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
         </div>
 
         {filteredPeople.length === 0 ? (
-          <div className="neo-card p-8 text-center space-y-2">
+          <div className="neo-card !rounded-2xl p-8 text-center space-y-2">
             <User className="w-8 h-8 text-[var(--text-secondary)] mx-auto opacity-40" />
             <p className="text-xs font-bold text-[var(--text-secondary)]">No accounts recorded yet</p>
           </div>
@@ -266,10 +298,10 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
               <div
                 key={person.personName}
                 onClick={() => handleOpenPerson(person.personName)}
-                className="neo-card p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[#ff5e1a]/40 transition-all active:scale-[0.99]"
+                className="neo-card !rounded-2xl p-3.5 sm:p-4 flex items-center justify-between gap-3 cursor-pointer hover:border-[#ff5e1a]/40 transition-all active:scale-[0.99]"
               >
                 <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                  <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
                     isToReceive 
                       ? 'bg-[#10b981]/15 text-[#10b981]' 
                       : isToReturn 
