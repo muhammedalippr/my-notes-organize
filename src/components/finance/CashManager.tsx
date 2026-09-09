@@ -324,12 +324,26 @@ export const CashManager: React.FC<CashManagerProps> = ({ settings, onEditorStat
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   <span className={`text-base font-black ${
                     isToReceive ? 'text-[#10b981]' : isToReturn ? 'text-[#ef4444]' : 'text-[var(--text-secondary)]'
                   }`}>
                     {isToReceive ? '+' : isToReturn ? '-' : ''}{currency}{Math.abs(person.netAmount).toLocaleString()}
                   </span>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      soundService.triggerHaptic(15);
+                      setPersonToDelete(person.personName);
+                    }}
+                    className="p-2 text-[var(--text-secondary)] hover:text-rose-500 rounded-xl hover:bg-[var(--bg-main)] transition-colors active:scale-90"
+                    title={`Delete ${person.personName}`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+
                   <ChevronRight className="w-4 h-4 text-[var(--text-secondary)] opacity-60" />
                 </div>
               </div>
