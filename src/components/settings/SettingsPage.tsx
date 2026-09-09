@@ -9,7 +9,7 @@ import {
   Upload, 
   Sun, 
   Moon,
-  Sparkles,
+  SunMoon,
   Layers,
   RotateCcw,
   Volume2,
@@ -181,7 +181,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
         <div className="grid grid-cols-3 gap-2.5">
           {[
-            { id: 'system', label: 'Auto', icon: Sparkles },
+            { id: 'system', label: 'Auto', icon: SunMoon },
             { id: 'light', label: 'Light', icon: Sun },
             { id: 'dark', label: 'Dark', icon: Moon },
           ].map((t) => {

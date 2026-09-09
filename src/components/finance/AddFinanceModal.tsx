@@ -59,15 +59,19 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
 
   if (!isOpen) return null;
 
+  const isPersonFixed = Boolean(initialPersonName || editingRecord?.personName);
+  const effectiveDisplayName = (initialPersonName || editingRecord?.personName || personName).trim();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!personName.trim()) return;
+    const effectiveName = personName.trim() || initialPersonName?.trim() || editingRecord?.personName?.trim() || '';
+    if (!effectiveName) return;
 
     // Amount can be optional or default to 0 if only adding a person contact
     const numAmount = parseFloat(amount) || 0;
 
     onSave({
-      personName: personName.trim(),
+      personName: effectiveName,
       amount: numAmount,
       direction,
       date,
@@ -87,9 +91,16 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
       <div className="w-full max-w-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-soft)]">
-          <h3 className="text-base font-black text-[var(--text-primary)]">
-            {editingRecord ? 'Edit Entry' : 'Record Entry'}
-          </h3>
+          <div>
+            <h3 className="text-base font-black text-[var(--text-primary)]">
+              {editingRecord ? 'Edit Entry' : 'Record Entry'}
+            </h3>
+            {effectiveDisplayName && (
+              <p className="text-xs font-bold text-[#ff5e1a] mt-0.5">
+                {effectiveDisplayName}
+              </p>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -99,20 +110,22 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
         </div>
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
-          {/* Person Name (Required) */}
-          <div>
-            <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-              Person / Contact Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={personName}
-              onChange={(e) => setPersonName(e.target.value)}
-              placeholder="Name / investment etc"
-              className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-3 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-bold transition-all"
-            />
-          </div>
+          {/* Person Name (Only shown if person is not already selected) */}
+          {!isPersonFixed && (
+            <div>
+              <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+                Person / Contact Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={personName}
+                onChange={(e) => setPersonName(e.target.value)}
+                placeholder="Name / investment etc"
+                className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-3 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-bold transition-all"
+              />
+            </div>
+          )}
 
           {/* Direction Toggle */}
           <div>
@@ -168,6 +181,7 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
                 type="number"
                 step="any"
                 min="0"
+                autoFocus={isPersonFixed}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="Optional or 0"
