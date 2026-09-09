@@ -86,6 +86,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   soundEnabled: true,
   alarmSound: 'multi_alarm',
   todoAlertSound: 'multi_alarm',
+  autoBackupEnabled: true,
 };
 
 const DEFAULT_HORIZON: HorizonData = {
@@ -522,6 +523,9 @@ export const StorageService = {
 
   // Check and create daily backup snapshot on app open (if not taken today)
   checkAndPerformDailyBackup(): void {
+    const settings = this.getSettings();
+    if (settings.autoBackupEnabled === false) return;
+
     const today = new Date().toISOString().slice(0, 10);
     const lastBackupDate = localStorage.getItem(STORAGE_KEYS.LAST_BACKUP_DATE);
 

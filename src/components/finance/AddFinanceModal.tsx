@@ -60,7 +60,6 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
   if (!isOpen) return null;
 
   const isPersonFixed = Boolean(initialPersonName || editingRecord?.personName);
-  const effectiveDisplayName = (initialPersonName || editingRecord?.personName || personName).trim();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,16 +90,9 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
       <div className="w-full max-w-lg bg-[var(--bg-surface)] border border-[var(--border-soft)] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border-soft)]">
-          <div>
-            <h3 className="text-base font-black text-[var(--text-primary)]">
-              {editingRecord ? 'Edit Entry' : 'Record Entry'}
-            </h3>
-            {effectiveDisplayName && (
-              <p className="text-xs font-bold text-[#ff5e1a] mt-0.5">
-                {effectiveDisplayName}
-              </p>
-            )}
-          </div>
+          <h3 className="text-base font-black text-[var(--text-primary)]">
+            {editingRecord ? 'Edit Entry' : 'Record Entry'}
+          </h3>
           <button
             onClick={onClose}
             className="p-2 rounded-xl text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
@@ -127,7 +119,24 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
             </div>
           )}
 
-          {/* Direction Toggle */}
+          {/* 1. Amount */}
+          <div>
+            <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+              Amount ({currencySymbol}) *
+            </label>
+            <input
+              type="number"
+              step="any"
+              min="0"
+              autoFocus={isPersonFixed}
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="0"
+              className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-3 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-base font-black transition-all"
+            />
+          </div>
+
+          {/* 2. Type (Direction Toggle) */}
           <div>
             <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-2">
               Type
@@ -171,49 +180,30 @@ export const AddFinanceModal: React.FC<AddFinanceModalProps> = ({
             </div>
           </div>
 
-          {/* Amount & Date in 2 cols */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-                Amount ({currencySymbol})
-              </label>
-              <input
-                type="number"
-                step="any"
-                min="0"
-                autoFocus={isPersonFixed}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="Optional or 0"
-                className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-2.5 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-black transition-all"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-                Date
-              </label>
-              <input
-                type="date"
-                required
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-2.5 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-bold transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Notes */}
+          {/* 3. Date */}
           <div>
             <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
-              Notes (Optional)
+              Date
+            </label>
+            <input
+              type="date"
+              required
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] px-4 py-2.5 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-bold transition-all"
+            />
+          </div>
+
+          {/* 4. Remarks / Purpose (No hint text) */}
+          <div>
+            <label className="block text-xs font-black text-[var(--text-secondary)] uppercase tracking-wider mb-1.5">
+              Remarks / Purpose
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g., Hotel booking advance, Dinner bill split..."
               rows={2}
-              className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] p-4 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-medium resize-none transition-all"
+              className="w-full bg-[var(--bg-main)] text-[var(--text-primary)] p-3.5 rounded-2xl border border-[var(--border-soft)] focus:border-[#ff5e1a]/50 outline-none text-sm font-medium resize-none transition-all"
             />
           </div>
 

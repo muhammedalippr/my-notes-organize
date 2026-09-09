@@ -43,21 +43,63 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [backupInfo, setBackupInfo] = useState(StorageService.getLocalBackupInfo());
   const [backupSuccess, setBackupSuccess] = useState<string | null>(null);
   const [isRestoreConfirmOpen, setIsRestoreConfirmOpen] = useState(false);
+  const [activeProgress, setActiveProgress] = useState<{
+    title: string;
+    description: string;
+    progress: number;
+  } | null>(null);
 
   const updateSettings = (newSettings: AppSettings) => {
     setSettings(newSettings);
     StorageService.saveSettings(newSettings);
   };
 
+  const runWithProgress = async (
+    title: string,
+    description: string,
+    action: () => Promise<void> | void,
+    minDurationMs: number = 3000
+  ) => {
+    soundService.triggerHaptic(20);
+    setActiveProgress({ title, description, progress: 12 });
+    const startTime = Date.now();
+
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(95, Math.round((elapsed / minDurationMs) * 95));
+      setActiveProgress({ title, description, progress: Math.max(12, pct) });
+    }, 60);
+
+    try {
+      await action();
+    } catch (err) {
+      console.error(err);
+    }
+
+    const elapsed = Date.now() - startTime;
+    const remaining = Math.max(0, minDurationMs - elapsed);
+    if (remaining > 0) {
+      await new Promise(r => setTimeout(r, remaining));
+    }
+
+    clearInterval(interval);
+    setActiveProgress({ title, description, progress: 100 });
+    await new Promise(r => setTimeout(r, 250));
+
+    setActiveProgress(null);
+    soundService.playCompleteSound();
+    setBackupSuccess('Done');
+    setTimeout(() => setBackupSuccess(null), 2500);
+  };
+
   const handleCreateLocalSnapshot = async () => {
     const authenticated = await AuthService.authenticate('Authenticate to create backup snapshot');
     if (!authenticated) return;
 
-    StorageService.createManualBackup();
-    setBackupInfo(StorageService.getLocalBackupInfo());
-    soundService.playCompleteSound();
-    setBackupSuccess('Snapshot saved');
-    setTimeout(() => setBackupSuccess(null), 2500);
+    await runWithProgress('Creating Backup', 'Saving your notes, tasks and accounts securely...', () => {
+      StorageService.createManualBackup();
+      setBackupInfo(StorageService.getLocalBackupInfo());
+    });
   };
 
   const handleOpenRestoreConfirm = async () => {
@@ -67,18 +109,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     setIsRestoreConfirmOpen(true);
   };
 
-  const executeRestoreLocalSnapshot = () => {
-    const success = StorageService.restoreDailyBackup();
-    if (success) {
-      setSettings(StorageService.getSettings());
-      onRefreshData();
-      soundService.playCompleteSound();
-      setBackupSuccess('Snapshot restored');
-      setTimeout(() => setBackupSuccess(null), 2500);
-    } else {
-      alert('No saved snapshot found to restore.');
-    }
+  const executeRestoreLocalSnapshot = async () => {
     setIsRestoreConfirmOpen(false);
+    await runWithProgress('Restoring Backup', 'Reloading your saved backup data...', () => {
+      const success = StorageService.restoreDailyBackup();
+      if (success) {
+        setSettings(StorageService.getSettings());
+        onRefreshData();
+      } else {
+        alert('No saved snapshot found to restore.');
+      }
+    });
   };
 
   const toggleModule = (key: ModuleKey) => {
@@ -97,47 +138,41 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     const authenticated = await AuthService.authenticate('Authenticate to export backup file');
     if (!authenticated) return;
 
-    const json = StorageService.exportBackup();
-    const fileName = `my_notes_backup_${new Date().toISOString().slice(0, 10)}.json`;
+    await runWithProgress('Exporting Backup', 'Generating your backup file...', async () => {
+      const json = StorageService.exportBackup();
+      const fileName = `my_notes_backup_${new Date().toISOString().slice(0, 10)}.json`;
 
-    try {
-      // 1. Write file to Cache/Documents
-      const writeResult = await Filesystem.writeFile({
-        path: fileName,
-        data: json,
-        directory: Directory.Cache,
-        encoding: Encoding.UTF8,
-      });
-
-      // 2. Open native Android system share/save sheet so user can choose 'Save to Downloads / Files'
-      const canShare = await Share.canShare();
-      if (canShare.value && writeResult.uri) {
-        await Share.share({
-          title: 'Export My Notes Backup',
-          text: `My Notes Backup JSON (${new Date().toISOString().slice(0, 10)})`,
-          url: writeResult.uri,
-          dialogTitle: 'Save / Share Backup JSON',
+      try {
+        // 1. Write file to Cache/Documents
+        const writeResult = await Filesystem.writeFile({
+          path: fileName,
+          data: json,
+          directory: Directory.Cache,
+          encoding: Encoding.UTF8,
         });
-      }
 
-      soundService.playCompleteSound();
-      setBackupSuccess('Saved to Downloads');
-      setTimeout(() => setBackupSuccess(null), 3000);
-    } catch (fsErr) {
-      console.log('Export backup fallback notice:', fsErr);
-      // Web browser download fallback
-      const blob = new Blob([json], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      a.click();
-      URL.revokeObjectURL(url);
-      
-      soundService.playCompleteSound();
-      setBackupSuccess('Saved to Downloads');
-      setTimeout(() => setBackupSuccess(null), 3000);
-    }
+        // 2. Open native Android system share/save sheet so user can choose 'Save to Downloads / Files'
+        const canShare = await Share.canShare();
+        if (canShare.value && writeResult.uri) {
+          await Share.share({
+            title: 'Export My Notes Backup',
+            text: `My Notes Backup JSON (${new Date().toISOString().slice(0, 10)})`,
+            url: writeResult.uri,
+            dialogTitle: 'Save / Share Backup JSON',
+          });
+        }
+      } catch (fsErr) {
+        console.log('Export backup fallback notice:', fsErr);
+        // Web browser download fallback
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    });
   };
 
   const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,16 +186,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     }
 
     const reader = new FileReader();
-    reader.onload = (event) => {
+    reader.onload = async (event) => {
       const content = event.target?.result as string;
-      if (content && StorageService.importBackup(content)) {
-        setSettings(StorageService.getSettings());
-        onRefreshData();
-        soundService.playCompleteSound();
-        setBackupSuccess('Backup restored successfully');
-        setTimeout(() => setBackupSuccess(null), 2500);
-      } else {
-        alert('Failed to import backup.');
+      if (content) {
+        await runWithProgress('Restoring Backup', 'Applying imported data to your app...', () => {
+          if (StorageService.importBackup(content)) {
+            setSettings(StorageService.getSettings());
+            onRefreshData();
+          } else {
+            alert('Failed to import backup.');
+          }
+        });
       }
     };
     reader.readAsText(file);
@@ -388,13 +424,34 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               <RotateCcw className="w-4 h-4 text-[#ff5e1a] shrink-0" />
               <div>
                 <p className="text-xs font-black text-[var(--text-primary)]">Daily Auto-Backup</p>
-                <p className="text-[10px] text-[var(--text-secondary)] font-bold mt-0.5">
-                  {backupInfo.exists 
-                    ? `Saved: ${backupInfo.date} • ${backupInfo.time || '18:00'}`
-                    : 'Auto-saved daily'}
-                </p>
+                {backupInfo.exists && backupInfo.date && (
+                  <p className="text-[10px] text-[var(--text-secondary)] font-bold mt-0.5">
+                    Last backup: {backupInfo.date}{backupInfo.time ? ` • ${backupInfo.time}` : ''}
+                  </p>
+                )}
               </div>
             </div>
+
+            {/* Option Toggle Switch */}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={settings.autoBackupEnabled !== false}
+              onClick={() => {
+                soundService.triggerHaptic(15);
+                const current = settings.autoBackupEnabled !== false;
+                updateSettings({ ...settings, autoBackupEnabled: !current });
+              }}
+              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors ${
+                settings.autoBackupEnabled !== false ? 'bg-[#ff5e1a]' : 'bg-[var(--border-soft)]'
+              }`}
+            >
+              <div
+                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
+                  settings.autoBackupEnabled !== false ? 'translate-x-5' : 'translate-x-0'
+                }`}
+              />
+            </button>
           </div>
 
           <div className="flex items-center gap-2 pt-1 border-t border-[var(--border-soft)]">
@@ -445,6 +502,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         onConfirm={executeRestoreLocalSnapshot}
         onCancel={() => setIsRestoreConfirmOpen(false)}
       />
+
+      {/* 3-Second Animated Progress Modal Overlay */}
+      {activeProgress && (
+        <div className="modal-overlay flex items-center justify-center p-6 z-50 animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-[var(--bg-surface)] border border-[var(--border-soft)] rounded-3xl p-6 shadow-2xl space-y-4 text-center">
+            <div className="w-14 h-14 mx-auto rounded-2xl bg-[#ff5e1a]/15 text-[#ff5e1a] flex items-center justify-center">
+              <RotateCcw className="w-7 h-7 animate-spin" />
+            </div>
+
+            <div>
+              <h4 className="text-base font-black text-[var(--text-primary)]">
+                {activeProgress.title}
+              </h4>
+              <p className="text-xs font-bold text-[var(--text-secondary)] mt-1">
+                {activeProgress.description}
+              </p>
+            </div>
+
+            {/* Smooth animated progress bar */}
+            <div className="space-y-1.5 pt-2">
+              <div className="w-full bg-[var(--bg-main)] h-2.5 rounded-full overflow-hidden border border-[var(--border-soft)]">
+                <div
+                  className="bg-gradient-to-r from-[#ff5e1a] to-[#ff8c42] h-full rounded-full transition-all duration-100 ease-out shadow-sm"
+                  style={{ width: `${activeProgress.progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-[11px] font-black text-[var(--text-secondary)]">
+                <span>Processing...</span>
+                <span>{activeProgress.progress}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Normal Popup Overlay Toast Message */}
       <Toast message={backupSuccess} />

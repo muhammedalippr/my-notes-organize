@@ -159,6 +159,7 @@ export interface AppSettings {
   soundEnabled: boolean;
   alarmSound?: AlertSoundType;
   todoAlertSound?: AlertSoundType;
+  autoBackupEnabled?: boolean;
   customSoundData?: string; // Base64 audio URI for custom storage sound
   customSoundName?: string;
 }
