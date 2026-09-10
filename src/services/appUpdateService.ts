@@ -5,34 +5,31 @@ export const AppUpdateService = {
     try {
       const result = await AppUpdate.getAppUpdateInfo();
 
-      // 1. If an update was already downloaded in the background, complete it now by restarting
+      // 1. If an update was already downloaded (e.g. from previous flexible update), complete and restart now
       if (result.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED) {
         await AppUpdate.completeFlexibleUpdate();
         return;
       }
 
-      // 2. If an update is available or already in progress:
-      if (
-        result.updateAvailability === AppUpdateAvailability.UPDATE_AVAILABLE ||
-        result.updateAvailability === AppUpdateAvailability.UPDATE_IN_PROGRESS
-      ) {
-        // Register listener for background flexible download completion
-        await AppUpdate.addListener('onFlexibleUpdateStateChange', async (state) => {
-          if (state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED) {
-            await AppUpdate.completeFlexibleUpdate();
-          }
-        });
+      // 2. If an immediate update is already in progress, resume it
+      if (result.updateAvailability === AppUpdateAvailability.UPDATE_IN_PROGRESS) {
+        await AppUpdate.performImmediateUpdate();
+        return;
+      }
 
-        // Prefer Immediate Update so user sees the download progress screen and auto-restarts
-        if (result.immediateUpdateAllowed) {
+      // 3. If an update is available, trigger immediate install flow
+      if (result.updateAvailability === AppUpdateAvailability.UPDATE_AVAILABLE) {
+        try {
           await AppUpdate.performImmediateUpdate();
-        } else if (result.flexibleUpdateAllowed) {
-          await AppUpdate.startFlexibleUpdate();
-        } else {
-          // Fallback: try immediate update, then flexible
-          try {
-            await AppUpdate.performImmediateUpdate();
-          } catch {
+        } catch (immediateErr) {
+          console.warn('performImmediateUpdate failed:', immediateErr);
+          // If immediate update is rejected by Play Store config, try opening Play Store or fallback
+          if (result.flexibleUpdateAllowed) {
+            await AppUpdate.addListener('onFlexibleUpdateStateChange', async (state) => {
+              if (state.installStatus === FlexibleUpdateInstallStatus.DOWNLOADED) {
+                await AppUpdate.completeFlexibleUpdate();
+              }
+            });
             await AppUpdate.startFlexibleUpdate();
           }
         }
