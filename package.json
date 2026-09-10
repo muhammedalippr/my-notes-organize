@@ -1,7 +1,7 @@
 {
   "name": "omni-todo-notes",
   "private": true,
-  "version": "1.0.4",
+  "version": "1.0.5",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,7 +22,6 @@
     "@capacitor/keyboard": "^8.0.5",
     "@capacitor/local-notifications": "^8.3.1",
     "@capacitor/share": "^8.0.1",
-    "@capacitor/status-bar": "^8.0.3",
     "@capawesome/capacitor-app-update": "^8.0.4",
     "clsx": "^2.1.1",
     "lucide-react": "^1.31.0",

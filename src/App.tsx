@@ -16,7 +16,6 @@ import { SettingsPage } from './components/settings/SettingsPage';
 import { AdMobService } from './services/adMobService';
 import { AppUpdateService } from './services/appUpdateService';
 import { App as CapApp } from '@capacitor/app';
-import { StatusBar, Style } from '@capacitor/status-bar';
 import { Keyboard } from '@capacitor/keyboard';
 
 export const App: React.FC = () => {
@@ -146,16 +145,13 @@ export const App: React.FC = () => {
         isDark = theme !== 'light';
       }
 
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
       if (isDark) {
         root.classList.add('dark');
-        try {
-          StatusBar.setStyle({ style: Style.Dark }); // Light icons on dark background
-        } catch (e) {}
+        if (metaTheme) metaTheme.setAttribute('content', '#181920');
       } else {
         root.classList.remove('dark');
-        try {
-          StatusBar.setStyle({ style: Style.Light }); // Dark icons on light background
-        } catch (e) {}
+        if (metaTheme) metaTheme.setAttribute('content', '#f8fafc');
       }
 
       // Notify native Android to toggle navigation bar color dynamically
