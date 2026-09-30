@@ -1,14 +1,12 @@
 package mynotes.todo.organize;
 
-import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
-import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.widget.RelativeLayout;
+import androidx.activity.EdgeToEdge;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -23,11 +21,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // 1. Official AndroidX Edge-To-Edge for Android 15 & 16 backward compatibility
+        EdgeToEdge.enable(this);
+
         super.onCreate(savedInstanceState);
-        
-        // 1. Transparent edge-to-edge status bar at the top
-        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
 
         // 2. Real-time system navigation bar & IME keyboard insets listener
         View rootView = getWindow().getDecorView();
@@ -46,7 +43,7 @@ public class MainActivity extends BridgeActivity {
         // 3. Android Native Global Layout Listener (Event-driven)
         rootView.getViewTreeObserver().addOnGlobalLayoutListener(this::applyNativeLayoutBounds);
 
-        // 4. Expose native theme updater so JavaScript can toggle bottom nav color & status bar icons in real time
+        // 4. Expose native theme updater so JavaScript can toggle status bar icons & nav bar contrast in real time
         if (getBridge() != null && getBridge().getWebView() != null) {
             getBridge().getWebView().post(() -> {
                 getBridge().getWebView().addJavascriptInterface(new Object() {
@@ -72,9 +69,6 @@ public class MainActivity extends BridgeActivity {
             controller.setAppearanceLightStatusBars(!isDark);
             controller.setAppearanceLightNavigationBars(!isDark);
         }
-
-        int navColor = isDark ? Color.parseColor("#121214") : Color.parseColor("#f5f5f7");
-        window.setNavigationBarColor(navColor);
     }
 
     private void applyNativeLayoutBounds() {
