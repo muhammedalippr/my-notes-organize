@@ -16,19 +16,36 @@ const TEST_DEVICE_IDS = [
 export const AdMobService = {
   isInitialized: false,
   adHeight: 0,
+  retryTimer: null as any,
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
-    // Real-time AdMob size listener
+    // 1. Real-time AdMob size listener
     try {
       AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size: AdMobBannerSize) => {
         this.adHeight = size.height || 0;
         console.log('AdMob banner height measured dynamically:', this.adHeight);
         document.documentElement.style.setProperty('--admob-banner-height', `${this.adHeight}px`);
       });
+
+      // 2. Successful ad load listener (clear pending retries)
+      AdMob.addListener(BannerAdPluginEvents.Loaded, () => {
+        console.log('AdMob banner loaded successfully');
+        if (this.retryTimer) {
+          clearTimeout(this.retryTimer);
+          this.retryTimer = null;
+        }
+      });
+
+      // 3. Failed to load (No-Fill / Offline) listener -> Safe 30s retry
+      AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error) => {
+        console.warn('AdMob banner failed to load (no-fill or network):', error);
+        document.documentElement.style.setProperty('--admob-banner-height', '0px');
+        this.scheduleRetry();
+      });
     } catch (e) {
-      console.log('AdMob size listener notice:', e);
+      console.log('AdMob event listeners notice:', e);
     }
 
     try {
@@ -41,7 +58,19 @@ export const AdMobService = {
       await this.showBottomBanner();
     } catch (error) {
       console.warn('AdMob initialization notice:', error);
+      this.scheduleRetry();
     }
+  },
+
+  scheduleRetry(): void {
+    if (this.retryTimer) {
+      clearTimeout(this.retryTimer);
+    }
+    console.log('Scheduling AdMob retry in 30 seconds...');
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      this.showBottomBanner();
+    }, 30000);
   },
 
   async showBottomBanner(): Promise<void> {
@@ -57,11 +86,16 @@ export const AdMobService = {
       console.log('AdMob live banner request sent');
     } catch (realAdError) {
       console.warn('Real banner request error:', realAdError);
+      this.scheduleRetry();
     }
   },
 
   async hideBanner(): Promise<void> {
     try {
+      if (this.retryTimer) {
+        clearTimeout(this.retryTimer);
+        this.retryTimer = null;
+      }
       await AdMob.hideBanner();
       document.documentElement.style.setProperty('--admob-banner-height', '0px');
     } catch (error) {
