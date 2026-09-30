@@ -33,7 +33,7 @@ export const AdMobService = {
 
     try {
       await AdMob.initialize({
-        initializeForTesting: true,
+        initializeForTesting: false,
         testingDevices: TEST_DEVICE_IDS,
       });
       this.isInitialized = true;
@@ -51,23 +51,12 @@ export const AdMobService = {
         adSize: BannerAdSize.ADAPTIVE_BANNER,
         position: BannerAdPosition.BOTTOM_CENTER,
         margin: 0,
-        isTesting: true,
+        isTesting: false,
       };
       await AdMob.showBanner(options);
-      console.log('AdMob banner request sent');
+      console.log('AdMob live banner request sent');
     } catch (realAdError) {
-      try {
-        const fallbackOptions: BannerAdOptions = {
-          adId: GOOGLE_TEST_BANNER_ID,
-          adSize: BannerAdSize.ADAPTIVE_BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-          margin: 0,
-          isTesting: true,
-        };
-        await AdMob.showBanner(fallbackOptions);
-      } catch (fallbackError) {
-        console.warn('Fallback banner notice:', fallbackError);
-      }
+      console.warn('Real banner request error:', realAdError);
     }
   },
 
