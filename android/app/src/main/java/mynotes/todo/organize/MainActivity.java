@@ -1,5 +1,7 @@
 package mynotes.todo.organize;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,6 +9,7 @@ import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.widget.RelativeLayout;
 import androidx.activity.EdgeToEdge;
+import androidx.activity.SystemBarStyle;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -21,10 +24,19 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        // 1. Official AndroidX Edge-To-Edge for Android 15 & 16 backward compatibility
-        EdgeToEdge.enable(this);
+        // Explicitly apply dark theme and solid background to ensure no white splash artifact shows
+        setTheme(R.style.AppTheme_NoActionBar);
+        getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#121214")));
+
+        // 1. Official AndroidX Edge-To-Edge with dark status bar and dark navigation bar styling
+        EdgeToEdge.enable(
+            this,
+            SystemBarStyle.dark(Color.TRANSPARENT),
+            SystemBarStyle.dark(Color.parseColor("#121214"))
+        );
 
         super.onCreate(savedInstanceState);
+        getWindow().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#121214")));
 
         // 2. Real-time system navigation bar & IME keyboard insets listener
         View rootView = getWindow().getDecorView();
